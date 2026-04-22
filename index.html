@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>MISO.BOX</title>
+<title>MISO.BOX — Pedidos Anticipados</title>
+
+<!-- Open Graph para WhatsApp / redes sociales -->
+<meta property="og:title" content="MISO.BOX — Sushi en Sierras Chicas"/>
+<meta property="og:description" content="Pedidos anticipados de sushi. Retiro y delivery en Sierras Chicas, Cordoba."/>
+<meta property="og:image" content="https://misobox.github.io/logo.png"/>
+<meta property="og:url" content="https://misobox.github.io"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://misobox.github.io/logo.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -497,7 +506,7 @@ function mostrarCarta(){
     }
   }
   h+='<button class="carta-btn" onclick="gTo(\'menu\')">Hacer un pedido</button>';
-  h+='<div style="text-align:center;padding:16px;font-size:11px;color:#444">Barrio Observatorio, Cordoba - Retiro y delivery coordinado por WhatsApp</div>';
+  h+='<div style="text-align:center;padding:16px;font-size:11px;color:#444">Sierras Chicas, Cordoba - Retiro y delivery coordinado por WhatsApp</div>';
   $("carta-content").innerHTML=h;
 }
 
@@ -574,7 +583,7 @@ function conf(){
     '<strong style="color:#ddd">No se confirma</strong> hasta recibir respuesta de nuestro equipo'+
     '</div></div>'+
     '<div style="background:#161616;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:24px;font-size:12px;color:#888;line-height:1.7">'+
-    'Barrio Observatorio, Cordoba<br>'+
+    'Sierras Chicas, Cordoba<br>'+
     'Entrega a domicilio segun zona y disponibilidad<br>'+
     'Retiro en local con coordinacion previa</div>'+
     '<button onclick="window.location.href=\''+waUrl+'\'" style="width:100%;background:var(--green);color:#000;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:16px;cursor:pointer">'+
