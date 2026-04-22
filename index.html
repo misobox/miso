@@ -257,11 +257,14 @@ body{background:#0d0d0d;color:#f0ece0;font-family:'DM Sans',sans-serif;min-heigh
     <label class="modal-lbl">Fecha y hora entrega</label>
     <input class="modal-inp" id="e-fecha"/>
     <label class="modal-lbl">Detalle del pedido</label>
-    <textarea class="modal-ta" id="e-detalle" rows="4"></textarea>
+    <textarea class="modal-ta" id="e-detalle" rows="4" placeholder="Ej: 2x SUSHIBOX 30pz + 1x HAND ROLL agregado por cliente"></textarea>
     <label class="modal-lbl">Observaciones</label>
     <input class="modal-inp" id="e-obs"/>
-    <label class="modal-lbl" style="color:var(--gold)">Total $</label>
-    <input class="modal-inp" id="e-total" type="number" style="color:var(--gold);font-size:20px;font-weight:700;border-color:var(--gold2)"/>
+    <div style="background:#1a1500;border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:16px">
+      <label style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px">Total $ — ACTUALIZA SI CAMBIO EL PEDIDO</label>
+      <input id="e-total" type="number" style="width:100%;background:#0d0d0d;border:2px solid var(--gold);color:var(--gold);border-radius:10px;padding:14px;font-size:28px;font-weight:700;font-family:'DM Sans',sans-serif;text-align:center"/>
+      <div style="font-size:11px;color:#888;margin-top:8px;text-align:center">Cambia este numero si el cliente agrego o quito productos</div>
+    </div>
     <input type="hidden" id="e-fila"/>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
