@@ -782,10 +782,16 @@ function renderCocina(d){
 
   var el=$("kb");
   var h='<div class="st">'+
-    '<div class="sc"><div class="sn">'+(d.totalPedidos||0)+'</div><div class="sl">Pedidos hoy</div></div>'+
+    '<div class="sc"><div class="sn">'+(d.totalPedidos||0)+'</div><div class="sl">Pedidos semana</div></div>'+
     '<div class="sc"><div class="sn">'+tot+'</div><div class="sl">Piezas totales</div></div>'+
-    '<div class="sc"><div class="sn" style="font-size:20px">'+fmt(d.totalVentas||0)+'</div><div class="sl">Ventas hoy</div></div>'+
+    '<div class="sc"><div class="sn" style="font-size:20px">'+fmt(d.totalVentas||0)+'</div><div class="sl">Ventas semana</div></div>'+
     '</div>';
+  // Mostrar rango de la semana
+  if(d.fechaDesde && d.fechaHasta){
+    h+='<div style="background:#1a1500;border:1px solid var(--gold2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--gold);text-align:center">'+
+       'Acumulado semana: <strong>lunes '+d.fechaDesde+' al '+d.fechaHasta+'</strong> — se reinicia cada lunes'+
+       '</div>';
+  }
 
   var cb=d.comboTotales||{},ck=Object.keys(cb);
   if(ck.length){
