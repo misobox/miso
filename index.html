@@ -125,7 +125,7 @@ body{background:#0d0d0d;color:#f0ece0;font-family:'DM Sans',sans-serif;min-heigh
 .adm-tog::after{content:'';position:absolute;width:18px;height:18px;background:#555;border-radius:50%;top:3px;left:3px;transition:all .2s}
 .adm-tog.on::after{background:var(--green);left:23px}
 .adm-del{background:none;border:none;color:#555;font-size:16px;cursor:pointer;padding:4px;flex-shrink:0}
-.adm-save{width:100%;padding:16px;background:var(--gold);color:#000;border:none;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:520px}
+.adm-save{width:100%;padding:16px;background:var(--gold);color:#000;border:none;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:520px;display:none}
 .adm-add{width:100%;padding:11px;background:transparent;color:var(--gold);border:1px dashed var(--gold2);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;margin:8px 0}
 .adm-form{background:#0d0d0d;border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px;display:none}
 .adm-form.show{display:block}
@@ -185,8 +185,6 @@ body{background:#0d0d0d;color:#f0ece0;font-family:'DM Sans',sans-serif;min-heigh
         <div class="dvd"></div>
         <label class="fl">Tu nombre</label>
         <input class="fi" id="fn" placeholder="Ej: Maria Garcia"/>
-        <label class="fl">Retiro o entrega a domicilio</label>
-        <input class="fi" id="fa" placeholder="Retiro en local / Calle y numero para entrega"/>
         <label class="fl">Pedido para el dia</label>
         <select class="fi" id="fd" style="cursor:pointer">
           <option value="">-- Elegir dia --</option>
@@ -594,11 +592,10 @@ function del(id){ delete cart[id]; rCard(id); updB(); rCart(); }
 function conf(){
   var l=cList();
   if(!l.length){ toast("Agrega al menos un producto",true); return; }
-  var n=$("fn").value.trim(),a=$("fa").value.trim(),d=$("fd").value.trim(),o=$("fo").value.trim(),t=tPrice();
+  var n=$("fn").value.trim(),d=$("fd").value.trim(),o=$("fo").value.trim(),t=tPrice();
   var m="Nuevo Pedido MISO.BOX\n";
   if(n) m+="\nCliente: "+n;
-  if(a) m+="\nDireccion/Retiro: "+a;
-  if(d) m+="\nFecha/Hora: "+d;
+  if(d) m+="\nPedido para el: "+d;
   m+="\n\nPedido:";
   var cant={},det=[];
   for(var i=0;i<l.length;i++){
@@ -609,7 +606,7 @@ function conf(){
   m+="\n\nTOTAL: "+fmt(t);
   if(o) m+="\n\nObs: "+o;
   var waUrl="https://wa.me/"+WA+"?text="+encodeURIComponent(m);
-  var payload={c:n,dir:a,fe:d,obs:o,total:t,cant:cant,det:det.join("|")};
+  var payload={c:n,fe:d,obs:o,total:t,cant:cant,det:det.join("|")};
   var img=new Image();
   img.src=SU+"?action=guardar&data="+encodeURIComponent(JSON.stringify(payload));
   $("pc").innerHTML=
@@ -1024,6 +1021,7 @@ if(qs.indexOf("cocina")>=0){
   loadK();
 } else if(qs.indexOf("admin")>=0){
   $("va-login").style.display="block";
+  document.querySelector(".adm-save").style.display="block";
   document.title="MISO.BOX Admin";
 } else {
   $("vc").style.display="block";
