@@ -1,1031 +1,418 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>MISO.BOX — Pedidos Anticipados</title>
+// ═══════════════════════════════════════════════════════════════
+// MISO.BOX — Google Apps Script
+// ═══════════════════════════════════════════════════════════════
 
-<!-- Open Graph para WhatsApp / redes sociales -->
-<meta property="og:title" content="MISO.BOX — Sushi en Sierras Chicas"/>
-<meta property="og:description" content="Pedidos anticipados de sushi. Retiro y delivery en Sierras Chicas, Cordoba."/>
-<meta property="og:image" content="https://misobox.github.io/miso/logo.png"/>
-<meta property="og:url" content="https://misobox.github.io/miso"/>
-<meta property="og:type" content="website"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="https://misobox.github.io/miso/logo.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:#0d0d0d;color:#f0ece0;font-family:'DM Sans',sans-serif;min-height:100vh}
-:root{--gold:#F5C400;--gold2:#b89100;--card:#181818;--border:#252525;--green:#25d366}
-.hdr{background:#111;border-bottom:2px solid var(--gold);padding:13px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:'Bebas Neue';font-size:28px;letter-spacing:3px;color:var(--gold)}
-.logo span{color:#fff}
-.logo small{font-family:'DM Sans';font-size:10px;font-weight:600;letter-spacing:2px;color:#555;display:block;margin-top:-6px}
-.tabs{display:flex;background:#111;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99}
-.tab{flex:1;padding:12px 0;text-align:center;font-size:11px;font-weight:700;letter-spacing:.3px;color:#555;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
-.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
-.page{display:none;padding-bottom:90px}
-.page.on{display:block}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a4a2a;color:#4ade80;border:1px solid #2a6a3a;padding:12px 22px;border-radius:50px;font-weight:600;font-size:14px;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.e{background:#4a1a1a;color:#f87171;border-color:#6a2a2a}
-.spin{display:inline-block;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.app{max-width:520px;margin:0 auto}
-/* MENU */
-.cat-title{padding:20px 14px 8px;font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--gold)}
-.item{background:var(--card);margin:5px 11px;border-radius:14px;border:1px solid var(--border);display:flex;align-items:stretch;transition:border-color .2s}
-.item.hq{border-color:#3a2e00}
-.ii{flex:1;padding:12px 14px}
-.in{font-weight:700;font-size:14px;color:#fff}
-.is{font-size:12px;color:var(--gold);font-weight:600;margin-top:1px}
-.id{font-size:11px;color:#666;margin-top:4px;line-height:1.5}
-.ip{font-size:15px;font-weight:700;color:#f0ece0;margin-top:7px}
-.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 12px;gap:5px;min-width:78px}
-.qb{display:flex;align-items:center;gap:6px}
-.qn{font-weight:800;font-size:16px;min-width:18px;text-align:center;color:var(--gold)}
-.qa,.qs{width:30px;height:30px;border-radius:50%;border:none;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s}
-.qa:active,.qs:active{transform:scale(.88)}
-.qa{background:var(--gold);color:#000}
-.qs{background:#2a2a2a;color:#ccc}
-/* CART */
-.pgw{padding:16px 13px 100px}
-.pgt{font-family:'Bebas Neue';font-size:28px;color:var(--gold);letter-spacing:2px;margin-bottom:16px}
-.empty{text-align:center;padding:70px 20px;color:#444}
-.cr{display:flex;align-items:center;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);gap:10px}
-.ci{flex:1}
-.cn{font-size:13px;font-weight:700;color:#fff}
-.cs{font-size:12px;color:var(--gold);font-weight:600}
-.cd{font-size:12px;color:#666;margin-top:2px}
-.cp{font-weight:700;font-size:14px;color:var(--gold);white-space:nowrap}
-.db{background:none;border:none;color:#e05555;cursor:pointer;font-size:16px;padding:4px 6px}
-.dvd{height:1px;background:var(--border);margin:18px 0}
-.fl{font-size:11px;font-weight:700;color:#666;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block}
-.fi{width:100%;background:var(--card);border:1px solid var(--border);color:#f0ece0;border-radius:10px;padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:13px;transition:border-color .2s}
-.fi:focus{outline:none;border-color:var(--gold)}
-.fi::placeholder{color:#444}
-.trow{display:flex;justify-content:space-between;align-items:center;padding:14px 0 18px}
-.tl{font-size:14px;color:#888}
-.ta{font-family:'Bebas Neue';font-size:32px;color:var(--gold)}
-.wb{width:100%;padding:16px;background:var(--green);color:#000;border:none;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s}
-.wb:active{background:#1aab52}
-.wi{width:22px;height:22px;fill:currentColor;flex-shrink:0}
-/* CARTA */
-.carta-cat{padding:22px 14px 10px;font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--gold);border-bottom:1px solid var(--border);margin:0 11px}
-.carta-item{margin:0 11px;padding:14px 0;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.carta-name{font-weight:700;font-size:14px;color:#fff}
-.carta-size{font-size:11px;color:var(--gold);font-weight:600;margin-top:2px}
-.carta-desc{font-size:11px;color:#555;margin-top:4px;line-height:1.5}
-.carta-price{font-family:'Bebas Neue';font-size:22px;color:var(--gold);white-space:nowrap}
-.carta-btn{display:block;margin:20px 11px;padding:15px;background:var(--gold);color:#000;border:none;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;text-align:center;width:calc(100% - 22px)}
-/* COCINA */
-.kh{background:#111;border-bottom:2px solid var(--gold);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.kl{font-family:'Bebas Neue';font-size:26px;color:var(--gold);letter-spacing:2px}
-.kl span{color:#fff}
-.rb{background:#2a2500;border:1px solid #3a3500;color:var(--gold);border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
-.kb{padding:16px 14px 60px;max-width:520px;margin:0 auto}
-.st{display:flex;gap:10px;margin-bottom:20px}
-.sc{flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
-.sn{font-family:'Bebas Neue';font-size:30px;color:var(--gold)}
-.sl{font-size:10px;color:#555;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
-.kt{font-family:'Bebas Neue';font-size:20px;color:var(--gold);letter-spacing:2px;margin:20px 0 10px}
-.pr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--card);border-radius:11px;margin-bottom:6px;border:1px solid var(--border)}
-.pr.tot{background:#1a1500;border-color:#3a2e00}
-.prl{font-size:13px;font-weight:600;color:#ddd}
-.prl.g{color:var(--gold)}
-.ps{font-size:11px;color:#555;margin-top:1px}
-.pn{font-family:'Bebas Neue';font-size:26px;color:var(--gold)}
-.pu{font-size:10px;color:#444;text-align:right}
-.pcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:8px}
-.pcard .ph{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:4px}
-.pcard .pcc{font-size:14px;font-weight:700;color:#fff}
-.pcard .pdt{font-size:12px;color:#888;margin-top:6px;line-height:1.5}
-.pcard .ptot{font-size:13px;font-weight:700;color:var(--gold);margin-top:6px}
-.pcard .pdir{font-size:12px;color:#666;margin-top:2px}
-.pill{display:inline-block;background:#1a1500;border:1px solid var(--gold2);color:var(--gold);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:600;margin:2px}
-.errb{background:#1a0a0a;border:1px solid #3a1a1a;border-radius:12px;padding:20px;text-align:center;color:#f87171;font-size:13px;line-height:1.6}
-/* ADMIN */
-.adm{max-width:520px;margin:0 auto;padding-bottom:80px}
-.adm-hdr{background:#111;border-bottom:2px solid var(--gold);padding:14px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
-.adm-logo{font-family:'Bebas Neue';font-size:22px;color:var(--gold);letter-spacing:2px}
-.adm-body{padding:16px 14px}
-.adm-cat{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden}
-.adm-cat-hdr{background:#1a1a1a;padding:12px 14px}
-.adm-cat-name{font-family:'Bebas Neue';font-size:18px;color:var(--gold);letter-spacing:1px}
-.adm-row{padding:12px 14px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:10px}
-.adm-row:last-child{border-bottom:none}
-.adm-info{flex:1;min-width:0}
-.adm-ni{background:transparent;border:none;color:#fff;font-weight:700;font-size:13px;width:100%;font-family:'DM Sans',sans-serif}
-.adm-di{background:transparent;border:none;color:#666;font-size:11px;width:100%;font-family:'DM Sans',sans-serif;margin-top:2px}
-.adm-pi{background:#0d0d0d;border:1px solid var(--border);color:var(--gold);border-radius:8px;padding:7px 8px;font-size:14px;font-weight:700;width:90px;font-family:'DM Sans',sans-serif;text-align:right}
-.adm-pi:focus{outline:none;border-color:var(--gold)}
-.adm-tog{width:44px;height:24px;background:#2a2a2a;border:none;border-radius:50px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-.adm-tog.on{background:#1a4a2a}
-.adm-tog::after{content:'';position:absolute;width:18px;height:18px;background:#555;border-radius:50%;top:3px;left:3px;transition:all .2s}
-.adm-tog.on::after{background:var(--green);left:23px}
-.adm-del{background:none;border:none;color:#555;font-size:16px;cursor:pointer;padding:4px;flex-shrink:0}
-.adm-save{width:100%;padding:16px;background:var(--gold);color:#000;border:none;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:520px}
-.adm-add{width:100%;padding:11px;background:transparent;color:var(--gold);border:1px dashed var(--gold2);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;margin:8px 0}
-.adm-form{background:#0d0d0d;border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px;display:none}
-.adm-form.show{display:block}
-.adm-fi{width:100%;background:var(--card);border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:8px}
-.adm-fi:focus{outline:none;border-color:var(--gold)}
-.adm-fi::placeholder{color:#444}
-.adm-row2{display:flex;gap:8px}
-.adm-sub{padding:10px 18px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
-/* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 24px;width:100%;max-width:340px;text-align:center}
-.login-logo{font-family:'Bebas Neue';font-size:36px;color:var(--gold);letter-spacing:3px;margin-bottom:4px}
-.login-sub{font-size:12px;color:#555;font-weight:600;letter-spacing:2px;margin-bottom:28px}
-.login-inp{width:100%;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:10px;padding:13px;font-size:16px;font-family:'DM Sans',sans-serif;text-align:center;letter-spacing:3px;margin-bottom:12px}
-.login-inp:focus{outline:none;border-color:var(--gold)}
-.login-btn{width:100%;padding:14px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer}
-.login-err{color:#f87171;font-size:13px;margin-top:8px;display:none}
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal-box{background:#181818;border-top:2px solid var(--gold);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:24px 18px 40px;max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Bebas Neue';font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:18px}
-.modal-lbl{font-size:11px;font-weight:700;color:#666;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:5px}
-.modal-inp{width:100%;background:#0d0d0d;border:1px solid #333;color:#f0ece0;border-radius:10px;padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:13px}
-.modal-inp:focus{outline:none;border-color:var(--gold)}
-.modal-ta{width:100%;background:#0d0d0d;border:1px solid #333;color:#f0ece0;border-radius:10px;padding:11px 13px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:13px;resize:vertical}
-.modal-ta:focus{outline:none;border-color:var(--gold)}
-.modal-btns{display:flex;gap:10px}
-.modal-cancel{flex:1;padding:14px;background:#222;color:#888;border:1px solid #333;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}
-.modal-save{flex:2;padding:14px;background:var(--gold);color:#000;border:none;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
-</style>
-</head>
-<body>
+const NOMBRE_PLANILLA = "MISO.BOX Pedidos";
 
-<!-- CLIENTE -->
-<div id="vc" style="display:none">
-<div class="app">
-  <header class="hdr">
-    <div class="logo">MISO<span>.</span>BOX<small>PEDIDOS ANTICIPADOS</small></div>
-    <button id="cart-btn" onclick="gTo('cart')" style="background:#111;color:#f0ece0;border:2px solid var(--border);border-radius:50px;padding:9px 18px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s">
-      🛒 <span style="font-size:13px">Carrito</span>
-      <span id="bdg" style="background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:900">0</span>
-    </button>
-  </header>
-  <nav class="tabs">
-    <div class="tab on" id="tm" onclick="gTo('menu')">🍱 Menu</div>
-    <div class="tab"    id="tc" onclick="gTo('carta')">📋 Carta</div>
-    <div class="tab"    id="tp" onclick="gTo('cart')">🛒 Pedido</div>
-  </nav>
-  <div class="page on" id="pm"></div>
-  <div class="page"    id="pca"><div id="carta-content"><div style="text-align:center;padding:50px;color:#444"><span class="spin">&#9203;</span> Cargando...</div></div></div>
-  <div class="page"    id="pc">
-    <div class="pgw">
-      <div class="pgt">Tu Pedido</div>
-      <div id="cr"></div>
-      <div id="cf" style="display:none">
-        <div class="dvd"></div>
-        <label class="fl">Tu nombre</label>
-        <input class="fi" id="fn" placeholder="Ej: Maria Garcia"/>
-        <label class="fl">Retiro o entrega a domicilio</label>
-        <input class="fi" id="fa" placeholder="Retiro en local / Entrega: Av. Colon 1234"/>
-        <label class="fl">Fecha y hora</label>
-        <input class="fi" id="fd" placeholder="Ej: Sabado 26/04, 21hs"/>
-        <label class="fl">Observaciones</label>
-        <input class="fi" id="fo" placeholder="Alergias, salsa preferida..."/>
-        <div style="background:#1a1200;border:1px solid #3a2e00;border-radius:12px;padding:13px 14px;margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:5px">Como funciona</div>
-          <div style="font-size:12px;color:#999;line-height:1.7">
-            1. Envia tu solicitud por WhatsApp<br>
-            2. Euge o Estefi confirman disponibilidad y coordinan entrega o retiro<br>
-            3. Tu pedido se confirma solo cuando recibs respuesta
-          </div>
-        </div>
-        <div class="trow"><div class="tl">TOTAL</div><div class="ta" id="ta">$0</div></div>
-        <button class="wb" onclick="conf()">
-          <svg class="wi" viewBox="0 0 32 32"><path d="M16 .5C7.44.5.5 7.44.5 16c0 2.83.74 5.49 2.03 7.81L.5 31.5l7.91-2.07A15.47 15.47 0 0016 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28.3a13.22 13.22 0 01-6.74-1.85l-.49-.29-5.06 1.33 1.34-4.93-.32-.51A13.21 13.21 0 012.7 16C2.7 9.16 8.16 3.7 16 3.7S29.3 9.16 29.3 16 23.84 28.8 16 28.8zm7.27-9.88c-.4-.2-2.36-1.16-2.72-1.3-.37-.13-.63-.2-.9.2s-1.04 1.3-1.27 1.57-.47.3-.87.1c-2.4-1.2-3.97-2.14-5.55-4.86-.42-.72.42-.67 1.2-2.23.13-.27.07-.5-.04-.7-.1-.2-.9-2.17-1.23-2.97-.32-.77-.66-.66-.9-.67h-.77c-.26 0-.7.1-1.07.5s-1.4 1.37-1.4 3.33 1.44 3.87 1.64 4.13c.2.27 2.82 4.3 6.84 6.03 2.55 1.1 3.54 1.2 4.82 1 .77-.12 2.36-.96 2.7-1.9.33-.94.33-1.74.23-1.9-.09-.17-.36-.27-.76-.47z"/></svg>
-          Enviar solicitud por WhatsApp
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- COCINA -->
-<div id="vk" style="display:none">
-  <div class="kh">
-    <div class="kl">MISO<span>.</span>BOX <span style="font-size:14px;color:#888;font-family:'DM Sans';font-weight:600">COCINA</span></div>
-    <button class="rb" onclick="loadK()">Actualizar</button>
-  </div>
-  <div class="kb" id="kb"><div style="text-align:center;padding:60px;color:#444"><span class="spin">&#9203;</span></div></div>
-</div>
-
-<!-- ADMIN LOGIN -->
-<div id="va-login" style="display:none">
-  <div class="login-wrap">
-    <div class="login-box">
-      <div class="login-logo">MISO<span style="color:#fff">.</span>BOX</div>
-      <div class="login-sub">ADMINISTRACION</div>
-      <input class="login-inp" id="adm-pass" type="password" placeholder="Contrasena" onkeydown="if(event.key==='Enter')login()"/>
-      <button class="login-btn" onclick="login()">Ingresar</button>
-      <div class="login-err" id="adm-err">Contrasena incorrecta</div>
-    </div>
-  </div>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="va-panel" style="display:none">
-  <div class="adm">
-    <div class="adm-hdr">
-      <div class="adm-logo">Admin MISO.BOX</div>
-      <button onclick="logout()" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer">Salir</button>
-    </div>
-    <div class="adm-body" id="adm-body">
-      <div style="text-align:center;padding:40px;color:#444"><span class="spin">&#9203;</span></div>
-    </div>
-    <button class="adm-save" onclick="saveAdmin()">Guardar cambios</button>
-  </div>
-</div>
-
-<!-- MODAL EDITAR PEDIDO -->
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal-box">
-    <div class="modal-title">Editar Pedido</div>
-    <label class="modal-lbl">Cliente</label>
-    <input class="modal-inp" id="e-cliente"/>
-    <label class="modal-lbl">Direccion / Retiro</label>
-    <input class="modal-inp" id="e-dir"/>
-    <label class="modal-lbl">Fecha y hora entrega</label>
-    <input class="modal-inp" id="e-fecha"/>
-    <label class="modal-lbl">Observaciones</label>
-    <input class="modal-inp" id="e-obs"/>
-
-    <!-- PRODUCTOS DEL PEDIDO -->
-    <label class="modal-lbl" style="margin-top:4px">Productos del pedido</label>
-    <div id="e-items" style="margin-bottom:12px"></div>
-
-    <!-- AGREGAR PRODUCTO -->
-    <div style="background:#111;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
-      <div style="font-size:11px;font-weight:700;color:#666;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Agregar producto</div>
-      <select id="e-cat" onchange="fillEItems()" style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:8px">
-        <option value="">-- Categoria --</option>
-      </select>
-      <select id="e-prod" style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:8px">
-        <option value="">-- Producto --</option>
-      </select>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="e-qty" type="number" min="1" value="1" style="width:70px;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:14px;font-family:'DM Sans',sans-serif;text-align:center"/>
-        <button onclick="agregarItemEdicion()" style="flex:1;padding:9px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">+ Agregar</button>
-      </div>
-    </div>
-
-    <!-- TOTAL -->
-    <div style="background:#1a1500;border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:13px;font-weight:700;color:#888">TOTAL</div>
-      <div id="e-total-display" style="font-family:'Bebas Neue';font-size:32px;color:var(--gold)">$0</div>
-    </div>
-    <input type="hidden" id="e-fila"/>
-    <input type="hidden" id="e-total"/>
-
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="modal-save" onclick="guardarEdicion()">Guardar cambios</button>
-    </div>
-  </div>
-</div>
-    <input type="hidden" id="e-fila"/>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="modal-save" onclick="guardarEdicion()">Guardar cambios</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="tst"></div>
-
-<script>
-var SU  = "https://script.google.com/macros/s/AKfycbyWZJjvBdOixHusTl9sqKMQuG_l-9dvQcyGeDbYLEZ56fwJZtRoTV-ucD0TDLOb3WRLhg/exec";
-var WA  = "543516614071";
-var PWD = "miso2026";
-
-var MENU = [
-  {c:"SUSHIBOX", i:[
-    {id:"sb30",n:"SUSHIBOX",s:"30 pz",p:30500,pr:"SB x30",d:"BS AS - Tamago - Langostino - Kanikama - SPF - Citrix - Honey"},
-    {id:"sb45",n:"SUSHIBOX",s:"45 pz",p:45200,pr:"SB x45",d:"BS AS - Tamago - Langostino - Kanikama - SPF - Citrix - Honey"},
-    {id:"sb60",n:"SUSHIBOX",s:"60 pz",p:60000,pr:"SB x60",d:"BS AS - Tamago - Langostino - Kanikama - SPF - Citrix - Honey"}
-  ]},
-  {c:"BOX SALMON ROYAL", i:[
-    {id:"sr30",n:"BOX SALMON ROYAL",s:"30 pz",p:40500,pr:"",d:"Seleccion de salmon a cargo de las chef"},
-    {id:"sr45",n:"BOX SALMON ROYAL",s:"45 pz",p:60000,pr:"",d:"Seleccion de salmon a cargo de las chef"},
-    {id:"sr60",n:"BOX SALMON ROYAL",s:"60 pz",p:79000,pr:"",d:"Seleccion de salmon a cargo de las chef"}
-  ]},
-  {c:"BOX COSTERO", i:[
-    {id:"cx20",n:"BOX COSTERO",s:"20 pz",p:20000,pr:"Costero x20",d:"Patagonia - Gamba - Mero - Reo"},
-    {id:"cx30",n:"BOX COSTERO",s:"30 pz",p:29800,pr:"Costero x30",d:"Patagonia - Gamba - Mero - Reo"},
-    {id:"cx45",n:"BOX COSTERO",s:"45 pz",p:43500,pr:"Costero x45",d:"Patagonia - Gamba - Mero - Reo"},
-    {id:"cx60",n:"BOX COSTERO",s:"60 pz",p:57400,pr:"Costero x60",d:"Patagonia - Gamba - Mero - Reo"}
-  ]},
-  {c:"BOX PATAGONIA", i:[
-    {id:"px20",n:"BOX PATAGONIA",s:"20 pz",p:19000,pr:"Pat x20",d:"Patagonia - Mero - Argenta - Acevichado"},
-    {id:"px30",n:"BOX PATAGONIA",s:"30 pz",p:28000,pr:"Pat x30",d:"Patagonia - Mero - Argenta - Acevichado"},
-    {id:"px45",n:"BOX PATAGONIA",s:"45 pz",p:41500,pr:"Pat x45",d:"Patagonia - Mero - Argenta - Acevichado"},
-    {id:"px60",n:"BOX PATAGONIA",s:"60 pz",p:55000,pr:"Pat x60",d:"Patagonia - Mero - Argenta - Acevichado"}
-  ]},
-  {c:"COMBOS", i:[
-    {id:"mix", n:"BOX MIX",      s:"15 pz",p:17900,pr:"Box Mix",   d:"5 SPF - 5 Kanikama - 5 Langostino"},
-    {id:"sal", n:"BOX SALMON",   s:"15 pz",p:20500,pr:"Box Salmon",d:"5 Philadelphia - 5 BS AS - 5 Honey"},
-    {id:"mis", n:"BOX MISO",     s:"30 pz",p:33800,pr:"Box Miso",  d:"5 Philadelphia - 5 Miso - 5 Langostino - 5 Tamago - 3 Geishas - 2 Niguiris"},
-    {id:"veg", n:"BOX VEGGIE",   s:"15 pz",p:16800,pr:"Box Veggie",d:"5 Mixtura - 5 Veggie - 5 Tamago Veggie"},
-    {id:"sin", n:"SIN ARROZ",    s:"20 pz",p:28400,pr:"Sin Arroz", d:"5 Tamago salmon - 5 Tamago langostino - 5 Paper - 5 Geishas"},
-    {id:"coc", n:"BOX COCIDO",   s:"20 pz",p:22000,pr:"Cocido",    d:"Seleccion equilibrada a cargo de las chefs"},
-    {id:"ts20",n:"TODO SALMON",  s:"20 pz",p:27300,pr:"TS x20",    d:"Seleccion a cargo de las chefs"},
-    {id:"comb",n:"COMBINADO",    s:"20 pz",p:26800,pr:"Combinado", d:"10 pz variadas salmon - 10 pz variadas langostinos"},
-    {id:"tent",n:"BOX TENTACION",s:"20 pz",p:23200,pr:"",          d:"Miso Roll - Patagonia - Langotino - Buenos Aires"}
-  ]},
-  {c:"PROMOS", i:[
-    {id:"pr30", n:"PROMO ROLL",        s:"30 pz", p:30500, pr:"",d:"Argenta - Patagonia - Langotino - BS AS - SPF - Tamago Patagonico"},
-    {id:"dg30", n:"PROMO DEGUSTACION", s:"30 pz", p:31500, pr:"",d:"Variedad seleccionada por las chef"},
-    {id:"dg45", n:"PROMO DEGUSTACION", s:"45 pz", p:47000, pr:"",d:"Variedad seleccionada por las chef"},
-    {id:"dg60", n:"PROMO DEGUSTACION", s:"60 pz", p:61000, pr:"",d:"Variedad seleccionada por las chef"},
-    {id:"dg90", n:"PROMO DEGUSTACION", s:"90 pz", p:90500, pr:"",d:"Variedad seleccionada por las chef"},
-    {id:"dg120",n:"PROMO DEGUSTACION", s:"120 pz",p:120400,pr:"",d:"Variedad seleccionada por las chef"},
-    {id:"dg150",n:"PROMO DEGUSTACION", s:"150 pz",p:149500,pr:"",d:"Variedad seleccionada por las chef"}
-  ]},
-  {c:"CRUNCH REBOZADOS", i:[
-    {id:"spfc5",  n:"SPF CRUNCH",           s:"5 pz", p:8000, pr:"",d:"Salmon rosado, palta y queso rebozado en panko frito, con salsa bas"},
-    {id:"spfc10", n:"SPF CRUNCH",           s:"10 pz",p:15000,pr:"",d:"Salmon rosado, palta y queso rebozado en panko frito, con salsa bas"},
-    {id:"hfc5",   n:"HATA FURAI CRUNCH",    s:"5 pz", p:8000, pr:"",d:"Mero frito y queso rebozado en panko, coronado con salsa acevichada"},
-    {id:"hfc10",  n:"HATA FURAI CRUNCH",    s:"10 pz",p:15000,pr:"",d:"Mero frito y queso rebozado en panko, coronado con salsa acevichada"},
-    {id:"ebc5",   n:"EBI CRUNCH",           s:"5 pz", p:8000, pr:"",d:"Langostinos al vapor y queso rebozados en panko, frito"},
-    {id:"ebc10",  n:"EBI CRUNCH",           s:"10 pz",p:15000,pr:"",d:"Langostinos al vapor y queso rebozados en panko, frito"},
-    {id:"masu5",  n:"MASU CRUNCH",          s:"5 pz", p:8000, pr:"",d:"Trucha salmonada y palta rebozado, frito, coronado con guacamole"},
-    {id:"masu10", n:"MASU CRUNCH",          s:"10 pz",p:15000,pr:"",d:"Trucha salmonada y palta rebozado, frito, coronado con guacamole"},
-    {id:"efcs5",  n:"EBI FURAI CRUNCH SPICY",s:"5 pz",p:8000, pr:"",d:"Langostino frito, palta rebozado, coronado con pasta marroqui"},
-    {id:"efcs10", n:"EBI FURAI CRUNCH SPICY",s:"10 pz",p:15000,pr:"",d:"Langostino frito, palta rebozado, coronado con pasta marroqui"},
-    {id:"sur5",   n:"SURIMI CRUNCH",        s:"5 pz", p:8000, pr:"",d:"Roll de kanikama y queso rebozado en panko frito"},
-    {id:"sur10",  n:"SURIMI CRUNCH",        s:"10 pz",p:15000,pr:"",d:"Roll de kanikama y queso rebozado en panko frito"}
-  ]},
-  {c:"ENTRANTES", i:[
-    {id:"tronco2",  n:"TRONCO CHINO",           s:"x2",      p:3500, pr:"",d:"Rebozado de vegetales con masa de arroz, frito"},
-    {id:"troncoXL", n:"TRONCO CHINO",           s:"XL",      p:9500, pr:"",d:"Rebozado de vegetales con masa de arroz, frito"},
-    {id:"tronco8",  n:"TRONCO CHINO",           s:"x8",      p:15000,pr:"",d:"Rebozado de vegetales con masa de arroz, frito"},
-    {id:"langpanko",n:"LANGOSTINOS EN PANKO",   s:"3 u",     p:4500, pr:"",d:"Langostinos rebozados en panko, fritos"},
-    {id:"langplan", n:"LANGOSTINOS A LA PLANCHA",s:"3 u",    p:4200, pr:"",d:"Langostinos a la plancha"},
-    {id:"pinch3",   n:"PINCHOS LANGOSTINOS",    s:"x3",      p:4000, pr:"",d:""},
-    {id:"pinch6",   n:"PINCHOS LANGOSTINOS",    s:"x6",      p:12000,pr:"",d:""},
-    {id:"chinas",   n:"PROMO CHINAS",           s:"porcion", p:1800, pr:"",d:"Por porcion"},
-    {id:"reb6",     n:"REBOZADOS",              s:"x6",      p:14000,pr:"",d:""}
-  ]},
-  {c:"GOHAN", i:[
-    {id:"ghxl",n:"GOHAN XL",           s:"",p:22000,pr:"",d:""},
-    {id:"ghch",n:"GOHAN DEL CHEF",     s:"",p:16000,pr:"",d:""},
-    {id:"ghpr",n:"GOHAN PREMIUM",      s:"",p:18000,pr:"",d:""},
-    {id:"ghvg",n:"GOHAN VEGGIE",       s:"",p:14000,pr:"",d:""},
-    {id:"ghcc",n:"GOHAN CRUNCH CRISPY",s:"",p:17000,pr:"",d:""}
-  ]},
-  {c:"ONIGUIRIS", i:[
-    {id:"oni", n:"ONIGUIRIS CLASICO",  s:"",p:6000,pr:"",d:"Clasico a eleccion"},
-    {id:"onir",n:"ONIGUIRIS REBOZADO", s:"",p:7000,pr:"",d:"Rebozado a eleccion"}
-  ]},
-  {c:"CEVICHES", i:[
-    {id:"cevd", n:"CEVICHE DUO",   s:"",p:22500,pr:"",d:"Seleccion de dos ceviches"},
-    {id:"cevrx",n:"CEVICHE ROSADO",s:"",p:25500,pr:"",d:"Ceviche de salmon rosado"},
-    {id:"cevbl",n:"CEVICHE BLANCO",s:"",p:19000,pr:"",d:"Ceviche de salmon blanco"}
-  ]},
-  {c:"HAND ROLL", i:[
-    {id:"hand",n:"HAND ROLL",s:"2 opciones",p:15000,pr:"",d:"Kani - Sake - Ebi - Veggie - Zeta - Masu"}
-  ]},
-  {c:"NIGUIRI y ARMALO", i:[
-    {id:"nig",  n:"NIGUIRI",s:"porcion",p:4000, pr:"",d:""},
-    {id:"arm15",n:"ARMALO", s:"x15",    p:21000,pr:"",d:"Elegi hasta 3 variedades de la carta"},
-    {id:"arm30",n:"ARMALO", s:"x30",    p:38600,pr:"",d:"Elegi hasta 6 variedades de la carta"}
-  ]},
-  {c:"EXTRAS", i:[
-    {id:"salsa-soja",   n:"SALSA DE SOJA",      s:"",p:600, pr:"",d:""},
-    {id:"salsa-bsas",   n:"SALSA BUENOS AIRES",  s:"",p:600, pr:"",d:""},
-    {id:"salsa-agri",   n:"SALSA AGRIDULCE CHINA",s:"",p:600,pr:"",d:""},
-    {id:"salsa-teri",   n:"SALSA TERIYAKI",      s:"",p:700, pr:"",d:""},
-    {id:"palitos",      n:"PALITOS",             s:"",p:200, pr:"",d:""},
-    {id:"wasabi",       n:"WASABI",              s:"",p:200, pr:"",d:""},
-    {id:"jengibre",     n:"JENGIBRE",            s:"",p:200, pr:"",d:""}
-  ]}
+const COMBOS_PROD = [
+  "SB x30","SB x45","SB x60",
+  "Costero x20","Costero x30","Costero x45","Costero x60",
+  "Box Mix","Box Salmón","Box Miso","Box Veggie","Sin Arroz",
+  "Pat x20","Pat x30","Pat x45","Pat x60",
+  "Cocido","TS x20","Combinado"
 ];
 
-var cart = {};
-var pedidosHoy = {};
-var adminMenu = null;
-var $ = function(id){ return document.getElementById(id); };
-var fmt = function(n){ return "$"+Number(n).toLocaleString("es-AR"); };
+const MATRIX = {
+  "BS AS":        [4,6,8,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0],
+  "HONEY":        [2,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,2],
+  "KANIKAMA":     [4,6,8,0,0,0,0,5,0,0,0,0,0,0,0,0,4,0,0],
+  "LANGOSTINO":   [4,6,8,5,7,12,15,5,0,5,0,0,0,0,0,0,4,0,3],
+  "MISO":         [0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0],
+  "MIXTURA":      [0,0,0,0,0,0,0,0,0,5,5,0,0,0,0,0,3,0,0],
+  "PHILADELPHIA": [0,0,0,0,0,0,0,0,5,5,0,0,0,0,0,0,0,0,0],
+  "SPF":          [4,6,8,0,0,0,0,5,0,5,0,0,0,0,0,0,0,4,3],
+  "TAMAGO SALM":  [2,3,4,0,0,0,0,0,0,5,0,5,0,0,0,0,0,4,3],
+  "VEGGIE":       [0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,3,0,0],
+  "TAMAGO VEGGIE":[0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0],
+  "CITRIX":       [4,6,8,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,3],
+  "PATAGONIA":    [0,0,0,5,8,12,15,0,0,0,0,0,5,7,10,15,0,0,0],
+  "REO":          [0,0,0,5,7,11,15,0,0,0,0,0,0,0,0,0,0,0,0],
+  "MERO":         [0,0,0,5,8,10,15,0,0,0,0,0,5,7,11,15,0,0,0],
+  "ARGENTA":      [0,0,0,0,0,0,0,0,0,0,0,0,5,8,12,15,0,0,0],
+  "ACEVICHADO":   [0,0,0,0,0,0,0,0,0,0,0,0,5,8,12,15,0,0,0],
+  "TAMAGO LANG":  [2,3,4,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0],
+  "PAPER":        [0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0],
+  "GEISHAS":      [0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0],
+  "TAM LANG SPF": [2,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3],
+  "TAM SALM SPF": [2,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0],
+};
 
-function getItem(id){
-  for(var i=0;i<MENU.length;i++)
-    for(var j=0;j<MENU[i].i.length;j++)
-      if(MENU[i].i[j].id===id) return MENU[i].i[j];
-  return null;
-}
-function cList(){
-  var l=[];
-  for(var id in cart){ if(cart[id]>0){ var x=getItem(id); if(x) l.push({x:x,q:cart[id]}); } }
-  return l;
-}
-function tPrice(){ return cList().reduce(function(s,r){return s+r.x.p*r.q;},0); }
-function tQty(){ var t=0; for(var id in cart) t+=cart[id]; return t; }
-function toast(m,e){
-  var el=$("tst");
-  el.textContent=m;
-  el.className="toast show"+(e?" e":"");
-  setTimeout(function(){el.className="toast";},3000);
-}
-
-// NAV
-function gTo(v){
-  var pages={menu:"pm",carta:"pca",cart:"pc"};
-  var tabs={menu:"tm",carta:"tc",cart:"tp"};
-  for(var k in pages){
-    $(pages[k]).className="page"+(v===k?" on":"");
-    $(tabs[k]).className="tab"+(v===k?" on":"");
-  }
-  if(v==="carta") renderCarta();
-  if(v==="cart")  rCart();
-}
-
-// MENU RENDER
-function rMenu(){
-  var warn = '<div style="background:#1a1200;border-left:4px solid var(--gold);margin:12px 11px 0;border-radius:10px;padding:13px 14px">' +
-    '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:5px">Importante antes de pedir</div>' +
-    '<div style="font-size:12px;color:#aaa;line-height:1.6">Este formulario es para <strong style="color:#ddd">reservar tu pedido</strong>. La confirmacion se realiza <strong style="color:#ddd">unicamente por WhatsApp</strong> con nuestro equipo.</div>' +
-    '</div>';
-  var h=warn;
-  for(var i=0;i<MENU.length;i++){
-    var hasItems=false;
-    for(var j=0;j<MENU[i].i.length;j++) if(MENU[i].i[j].activo!=="NO") hasItems=true;
-    if(!hasItems) continue;
-    h+='<div class="cat-title">'+MENU[i].c+'</div>';
-    for(var j=0;j<MENU[i].i.length;j++){
-      var x=MENU[i].i[j];
-      if(x.activo==="NO") continue;
-      var q=cart[x.id]||0;
-      h+='<div class="item'+(q?" hq":"")+'\" id="it-'+x.id+'">'+
-         '<div class="ii">'+
-         '<div class="in">'+x.n+'</div>'+
-         '<div class="is">'+x.s+'</div>'+
-         (x.d?'<div class="id">'+x.d+'</div>':'')+
-         '<div class="ip">'+fmt(x.p)+'</div>'+
-         '</div>'+
-         '<div class="ic">'+ctrl(x.id,q)+'</div>'+
-         '</div>';
+// ═══════════════════════════════════════════════════════════════
+// RECIBE PEDIDOS (POST) Y DEVUELVE PRODUCCIÓN / CARTA (GET)
+// ═══════════════════════════════════════════════════════════════
+function doPost(e) {
+  try {
+    var raw = e.postData ? e.postData.contents : '';
+    var data = JSON.parse(raw);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (data.action === 'saveCarta' && data.items) {
+      guardarCarta(ss, data.items);
+    } else {
+      guardarPedido(ss, data);
     }
-  }
-  $("pm").innerHTML=h;
-}
-
-function ctrl(id,q){
-  if(!q) return '<button class="qa" onclick="add(\''+id+'\')">+</button>';
-  return '<div class="qb"><button class="qs" onclick="sub(\''+id+'\')">-</button><span class="qn">'+q+'</span><button class="qa" onclick="add(\''+id+'\')">+</button></div>';
-}
-function rCard(id){
-  var el=$("it-"+id); if(!el) return;
-  var q=cart[id]||0;
-  el.querySelector(".ic").innerHTML=ctrl(id,q);
-  el.className="item"+(q?" hq":"");
-}
-function updB(){
-  var n=tQty(),b=$("bdg"),btn=$("cart-btn");
-  b.textContent=n; b.style.display=n?"flex":"none";
-  if(btn){
-    if(n>0){ btn.style.background="var(--gold)"; btn.style.color="#000"; btn.style.borderColor="var(--gold)"; }
-    else{ btn.style.background="#111"; btn.style.color="#f0ece0"; btn.style.borderColor="var(--border)"; }
-  }
-}
-function add(id){ cart[id]=(cart[id]||0)+1; rCard(id); updB(); }
-function sub(id){ if(!cart[id]) return; cart[id]--; if(!cart[id]) delete cart[id]; rCard(id); updB(); }
-
-// CARTA
-function renderCarta(){
-  $("carta-content").innerHTML='<div style="text-align:center;padding:50px;color:#444"><span class="spin">&#9203;</span> Cargando carta...</div>';
-  fetch(SU+"?action=getCarta")
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.ok && data.items && data.items.length>0) aplicarDatos(data.items);
-      mostrarCarta();
-    })
-    .catch(function(){ mostrarCarta(); });
-}
-
-function aplicarDatos(items){
-  for(var i=0;i<items.length;i++){
-    var it=items[i];
-    for(var c=0;c<MENU.length;c++){
-      for(var j=0;j<MENU[c].i.length;j++){
-        if(MENU[c].i[j].id===it.id){
-          if(Number(it.p)>0) MENU[c].i[j].p=Number(it.p);
-          if(it.n) MENU[c].i[j].n=it.n;
-          if(it.d!==undefined) MENU[c].i[j].d=it.d;
-          MENU[c].i[j].activo=it.activo||"SI";
-        }
-      }
-    }
+    return respuesta({ok: true});
+  } catch(err) {
+    return respuesta({ok: false, error: err.toString()});
   }
 }
 
-function mostrarCarta(){
-  var h="";
-  for(var i=0;i<MENU.length;i++){
-    var items=MENU[i].i.filter(function(x){return x.activo!=="NO";});
-    if(!items.length) continue;
-    h+='<div class="carta-cat">'+MENU[i].c+'</div>';
-    for(var j=0;j<items.length;j++){
-      var x=items[j];
-      h+='<div class="carta-item">'+
-         '<div>'+
-         '<div class="carta-name">'+x.n+(x.s?' <span style="font-weight:400;color:#888">'+x.s+'</span>':'')+' </div>'+
-         (x.d?'<div class="carta-desc">'+x.d+'</div>':'')+
-         '</div>'+
-         '<div class="carta-price">'+fmt(x.p)+'</div>'+
-         '</div>';
-    }
-  }
-  h+='<button class="carta-btn" onclick="gTo(\'menu\')">Hacer un pedido</button>';
-  h+='<div style="text-align:center;padding:16px;font-size:11px;color:#444">Sierras Chicas, Cordoba - Retiro y delivery coordinado por WhatsApp</div>';
-  $("carta-content").innerHTML=h;
-}
+function doGet(e) {
+  var params = (e && e.parameter) ? e.parameter : {};
 
-// CARGAR PRECIOS AL INICIO
-function loadPrecios(){
-  fetch(SU+"?action=getCarta")
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(!data.ok||!data.items||!data.items.length) return;
-      aplicarDatos(data.items);
-      rMenu();
-    })
-    .catch(function(){});
-}
-
-// CART
-function rCart(){
-  var l=cList(),el=$("cr"),f=$("cf");
-  if(!l.length){
-    el.innerHTML='<div class="empty"><div style="font-size:52px;margin-bottom:14px">&#127843;</div><p>Tu carrito esta vacio.</p><p style="margin-top:8px;font-size:12px;color:#333">Agrega combos desde el menu</p></div>';
-    f.style.display="none"; return;
+  // ── GUARDAR PEDIDO ──
+  if (params.action === 'guardar' && params.data) {
+    try {
+      var data = JSON.parse(decodeURIComponent(params.data));
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      guardarPedido(ss, {
+        cliente:      data.c   || data.cliente     || '',
+        direccion:    data.dir || data.direccion   || '',
+        fechaEntrega: data.fe  || data.fechaEntrega|| '',
+        obs:          data.obs || '',
+        total:        data.total || 0,
+        cantidades:   data.cant || data.cantidades || {},
+        detalle:      data.det  || data.detalle    || ''
+      });
+    } catch(err) { Logger.log('Error guardar: ' + err); }
+    return ContentService.createTextOutput('ok').setMimeType(ContentService.MimeType.TEXT);
   }
-  var h="";
-  for(var i=0;i<l.length;i++){
-    var x=l[i].x,q=l[i].q;
-    h+='<div class="cr">'+
-       '<div class="ci">'+
-       '<div class="cn">'+x.n+' <span class="cs">'+x.s+'</span></div>'+
-       '<div class="cd">'+q+" x "+fmt(x.p)+'</div>'+
-       '</div>'+
-       '<div style="display:flex;align-items:center;gap:8px">'+
-       '<div class="cp">'+fmt(x.p*q)+'</div>'+
-       '<button class="db" onclick="del(\''+x.id+'\')">x</button>'+
-       '</div></div>';
-  }
-  el.innerHTML=h; f.style.display="block";
-  $("ta").textContent=fmt(tPrice());
-}
-function del(id){ delete cart[id]; rCard(id); updB(); rCart(); }
 
-// CONFIRMAR
-function conf(){
-  var l=cList();
-  if(!l.length){ toast("Agrega al menos un producto",true); return; }
-  var n=$("fn").value.trim(),a=$("fa").value.trim(),d=$("fd").value.trim(),o=$("fo").value.trim(),t=tPrice();
-  var m="Nuevo Pedido MISO.BOX\n";
-  if(n) m+="\nCliente: "+n;
-  if(a) m+="\nDireccion/Retiro: "+a;
-  if(d) m+="\nFecha/Hora: "+d;
-  m+="\n\nPedido:";
-  var cant={},det=[];
-  for(var i=0;i<l.length;i++){
-    m+="\n- "+l[i].q+"x "+l[i].x.n+" "+l[i].x.s+" - "+fmt(l[i].x.p*l[i].q);
-    if(l[i].x.pr) cant[l[i].x.pr]=(cant[l[i].x.pr]||0)+l[i].q;
-    det.push(l[i].q+"x "+l[i].x.n+" "+l[i].x.s);
+  // ── GUARDAR CARTA (desde admin via pixel) ──
+  if (params.action === 'saveCarta' && params.data) {
+    try {
+      var items = JSON.parse(decodeURIComponent(params.data));
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      guardarCarta(ss, items);
+    } catch(err) { Logger.log('Error saveCarta: ' + err); }
+    return ContentService.createTextOutput('ok').setMimeType(ContentService.MimeType.TEXT);
   }
-  m+="\n\nTOTAL: "+fmt(t);
-  if(o) m+="\n\nObs: "+o;
-  var waUrl="https://wa.me/"+WA+"?text="+encodeURIComponent(m);
-  var payload={c:n,dir:a,fe:d,obs:o,total:t,cant:cant,det:det.join("|")};
-  var img=new Image();
-  img.src=SU+"?action=guardar&data="+encodeURIComponent(JSON.stringify(payload));
-  $("pc").innerHTML=
-    '<div style="padding:32px 20px 80px">'+
-    '<div style="text-align:center;margin-bottom:24px">'+
-    '<div style="font-size:52px;margin-bottom:12px">&#128228;</div>'+
-    '<div style="font-family:Bebas Neue;font-size:28px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">Solicitud enviada!</div>'+
-    '<div style="color:#666;font-size:13px">'+det.join(" - ")+'</div></div>'+
-    '<div style="background:#1a0e00;border:2px solid var(--gold);border-radius:14px;padding:18px 16px;margin-bottom:20px">'+
-    '<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:10px;text-align:center">Tu pedido AUN NO ESTA CONFIRMADO</div>'+
-    '<div style="font-size:13px;color:#bbb;line-height:1.8">'+
-    'Recibimos tu solicitud<br>'+
-    '<strong style="color:#ddd">Euge o Estefi te responden por WhatsApp</strong> para confirmar y coordinar entrega o retiro<br>'+
-    '<strong style="color:#ddd">No se confirma</strong> hasta recibir respuesta de nuestro equipo'+
-    '</div></div>'+
-    '<div style="background:#161616;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:24px;font-size:12px;color:#888;line-height:1.7">'+
-    'Sierras Chicas, Cordoba<br>'+
-    'Entrega a domicilio segun zona y disponibilidad<br>'+
-    'Retiro en local con coordinacion previa</div>'+
-    '<button onclick="window.location.href=\''+waUrl+'\'" style="width:100%;background:var(--green);color:#000;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:16px;cursor:pointer">'+
-    'Abrir WhatsApp</button>'+
-    '<div style="text-align:center;color:#444;font-size:12px;margin-top:14px">Abriendo automaticamente en unos segundos...</div>'+
-    '</div>';
-  setTimeout(function(){ window.location.href=waUrl; },4000);
-}
 
-// ADMIN LOGIN
-function login(){
-  if($("adm-pass").value===PWD){
-    $("va-login").style.display="none";
-    $("va-panel").style.display="block";
-    loadAdmin();
-  } else {
-    $("adm-err").style.display="block";
-    $("adm-pass").value="";
-    setTimeout(function(){$("adm-err").style.display="none";},2000);
+  // ── OBTENER CARTA ACTUAL ──
+  if (params.action === 'getCarta') {
+    return getCarta();
   }
-}
-function logout(){
-  $("va-panel").style.display="none";
-  $("va-login").style.display="block";
-  $("adm-pass").value="";
-}
 
-// ADMIN RENDER
-function loadAdmin(){
-  adminMenu=JSON.parse(JSON.stringify(MENU));
-  $("adm-body").innerHTML='<div style="text-align:center;padding:40px;color:#444"><span class="spin">&#9203;</span></div>';
-  fetch(SU+"?action=getCarta")
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.ok&&data.items){
-        for(var i=0;i<data.items.length;i++){
-          var it=data.items[i];
-          for(var c=0;c<adminMenu.length;c++){
-            for(var j=0;j<adminMenu[c].i.length;j++){
-              if(adminMenu[c].i[j].id===it.id){
-                adminMenu[c].i[j].p=Number(it.p)||adminMenu[c].i[j].p;
-                adminMenu[c].i[j].n=it.n||adminMenu[c].i[j].n;
-                adminMenu[c].i[j].d=it.d||adminMenu[c].i[j].d;
-                adminMenu[c].i[j].activo=it.activo||"SI";
-              }
-            }
+  // ── ELIMINAR PEDIDO ──
+  if (params.action === 'eliminar' && params.fila) {
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var hoja = ss.getSheetByName("PEDIDOS");
+      var fila = parseInt(params.fila);
+      if (fila > 1) hoja.deleteRow(fila);
+    } catch(err) { Logger.log('Error eliminar: ' + err); }
+    return ContentService.createTextOutput('ok').setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // ── EDITAR PEDIDO ──
+  if (params.action === 'editarPedido' && params.data) {
+    try {
+      var data = JSON.parse(decodeURIComponent(params.data));
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var hoja = ss.getSheetByName("PEDIDOS");
+      var fila = parseInt(data.fila);
+      if (fila > 1) {
+        if (data.cliente      !== undefined) hoja.getRange(fila, 2).setValue(data.cliente);
+        if (data.direccion    !== undefined) hoja.getRange(fila, 3).setValue(data.direccion);
+        if (data.fechaEntrega !== undefined) hoja.getRange(fila, 4).setValue(data.fechaEntrega);
+        if (data.obs          !== undefined) hoja.getRange(fila, 5).setValue(data.obs);
+        if (data.total        !== undefined) hoja.getRange(fila, 6).setValue(data.total);
+        // Actualizar cantidades de combos (columnas G en adelante) → afecta produccion
+        if (data.cantidades) {
+          for (var c = 0; c < COMBOS_PROD.length; c++) {
+            var key = COMBOS_PROD[c];
+            var val = data.cantidades[key] !== undefined ? data.cantidades[key] : 0;
+            hoja.getRange(fila, 7 + c).setValue(val);
           }
         }
+        // Detalle en ultima columna
+        var colDetalle = 7 + COMBOS_PROD.length;
+        if (data.detalle !== undefined) hoja.getRange(fila, colDetalle).setValue(data.detalle);
       }
-      renderAdmin();
-    })
-    .catch(function(){ renderAdmin(); });
-}
-
-function renderAdmin(){
-  var h='<div style="font-size:12px;color:#555;margin-bottom:16px">Edita precios y activa/desactiva productos. Toca Guardar cuando termines.</div>';
-  for(var i=0;i<adminMenu.length;i++){
-    var cat=adminMenu[i];
-    h+='<div class="adm-cat"><div class="adm-cat-hdr"><div class="adm-cat-name">'+cat.c+'</div></div>';
-    for(var j=0;j<cat.i.length;j++){
-      var x=cat.i[j];
-      var on=x.activo!=="NO";
-      h+='<div class="adm-row">'+
-         '<div class="adm-info">'+
-         '<input class="adm-ni" value="'+x.n.replace(/"/g,"&quot;")+'" data-c="'+i+'" data-j="'+j+'" data-f="n" onchange="upd(this)"/>'+
-         '<input class="adm-di" value="'+(x.d||"").replace(/"/g,"&quot;")+'" data-c="'+i+'" data-j="'+j+'" data-f="d" onchange="upd(this)" placeholder="Descripcion..."/>'+
-         '</div>'+
-         '<input class="adm-pi" type="number" value="'+x.p+'" data-c="'+i+'" data-j="'+j+'" data-f="p" onchange="upd(this)"/>'+
-         '<button class="adm-tog'+(on?" on":"")+'" data-c="'+i+'" data-j="'+j+'" onclick="togItem(this)"></button>'+
-         '<button class="adm-del" data-c="'+i+'" data-j="'+j+'" onclick="delItem(this)">&#128465;</button>'+
-         '</div>';
-    }
-    h+='<div style="padding:8px 14px">'+
-       '<button class="adm-add" onclick="showAddForm('+i+')">+ Agregar producto</button>'+
-       '<div class="adm-form" id="addform-'+i+'">'+
-       '<input class="adm-fi" placeholder="Nombre" id="add-n-'+i+'"/>'+
-       '<div class="adm-row2">'+
-       '<input class="adm-fi" placeholder="Tamano (ej: 20 pz)" id="add-s-'+i+'" style="flex:1"/>'+
-       '<input class="adm-fi" type="number" placeholder="Precio" id="add-p-'+i+'" style="width:100px"/>'+
-       '</div>'+
-       '<input class="adm-fi" placeholder="Descripcion (opcional)" id="add-d-'+i+'"/>'+
-       '<button class="adm-sub" onclick="addItem('+i+')">Agregar</button>'+
-       '</div></div>';
-    h+='</div>';
+    } catch(err) { Logger.log('Error editar: ' + err); }
+    return ContentService.createTextOutput('ok').setMimeType(ContentService.MimeType.TEXT);
   }
-  $("adm-body").innerHTML=h;
+
+  // ── PRODUCCIÓN DEL DÍA ──
+  if (params.action === 'produccion') {
+    return getProduccionHoy();
+  }
+
+  return ContentService.createTextOutput('MISO.BOX API activa ✓');
 }
 
-function upd(el){
-  var c=parseInt(el.dataset.c),j=parseInt(el.dataset.j),f=el.dataset.f;
-  adminMenu[c].i[j][f]=f==="p"?Number(el.value)||0:el.value;
-}
-function togItem(btn){
-  var c=parseInt(btn.dataset.c),j=parseInt(btn.dataset.j);
-  var on=adminMenu[c].i[j].activo!=="NO";
-  adminMenu[c].i[j].activo=on?"NO":"SI";
-  btn.className="adm-tog"+(on?"":" on");
-}
-function delItem(btn){
-  var c=parseInt(btn.dataset.c),j=parseInt(btn.dataset.j);
-  if(!confirm("Eliminar "+adminMenu[c].i[j].n+"?")) return;
-  adminMenu[c].i.splice(j,1);
-  renderAdmin();
-  toast("Eliminado - guarda los cambios");
-}
-function showAddForm(i){
-  var f=$("addform-"+i);
-  f.className="adm-form"+(f.className.indexOf("show")>=0?"":" show");
-}
-function addItem(ci){
-  var n=$("add-n-"+ci).value.trim(),p=Number($("add-p-"+ci).value)||0,s=$("add-s-"+ci).value.trim(),d=$("add-d-"+ci).value.trim();
-  if(!n||!p){ toast("Completa nombre y precio",true); return; }
-  adminMenu[ci].i.push({id:"item"+Date.now(),n:n,s:s,p:p,d:d,pr:"",activo:"SI",nuevo:true,cat:adminMenu[ci].c});
-  $("addform-"+ci).className="adm-form";
-  renderAdmin();
-  toast("Agregado - guarda los cambios");
-}
-function saveAdmin(){
-  var btn=document.querySelector(".adm-save");
-  btn.textContent="Guardando..."; btn.disabled=true;
-  var items=[];
-  for(var i=0;i<adminMenu.length;i++)
-    for(var j=0;j<adminMenu[i].i.length;j++){
-      var x=adminMenu[i].i[j];
-      items.push({id:x.id,cat:adminMenu[i].c,n:x.n,s:x.s||"",p:x.p,d:x.d||"",pr:x.pr||"",activo:x.activo||"SI",nuevo:x.nuevo||false});
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUCCIÓN DE LA SEMANA — acumula desde el lunes hasta hoy
+// Se reinicia automáticamente cada lunes
+// ═══════════════════════════════════════════════════════════════
+function getProduccionHoy() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("PEDIDOS");
+  const datos = hoja.getDataRange().getValues();
+
+  // Calcular el lunes de esta semana
+  const hoy = new Date();
+  hoy.setHours(23, 59, 59, 0);
+  const lunes = new Date();
+  lunes.setHours(0, 0, 0, 0);
+  const diaSemana = lunes.getDay(); // 0=dom, 1=lun, ..., 6=sab
+  const diasDesdelunes = diaSemana === 0 ? 6 : diaSemana - 1;
+  lunes.setDate(lunes.getDate() - diasDesdelunes);
+
+  let totalPedidos = 0;
+  let totalVentas = 0;
+  const comboTotales = {};
+  const pedidosDetalle = [];
+
+  for (let r = 1; r < datos.length; r++) {
+    if (!datos[r][0]) continue;
+    const fechaFila = new Date(datos[r][0]);
+    // Incluir pedidos desde el lunes de esta semana hasta hoy
+    if (fechaFila < lunes || fechaFila > hoy) continue;
+
+    totalPedidos++;
+    totalVentas += datos[r][5] || 0;
+
+    // Columnas G en adelante = cantidades de combos
+    for (let c = 0; c < COMBOS_PROD.length; c++) {
+      const qty = datos[r][6 + c] || 0;
+      if (qty > 0) {
+        comboTotales[COMBOS_PROD[c]] = (comboTotales[COMBOS_PROD[c]] || 0) + qty;
+      }
     }
-  var img=new Image();
-  img.src=SU+"?action=saveCarta&data="+encodeURIComponent(JSON.stringify(items));
-  fetch(SU,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"saveCarta",items:items})}).catch(function(){});
-  setTimeout(function(){
-    btn.textContent="Guardar cambios"; btn.disabled=false;
-    MENU=JSON.parse(JSON.stringify(adminMenu));
-    toast("Cambios guardados en Google Sheets");
-  },2000);
-}
 
-// COCINA
-function loadK(){
-  pedidosHoy={};
-  $("kb").innerHTML='<div style="text-align:center;padding:60px;color:#444"><span class="spin">&#9203;</span></div>';
-  fetch(SU+"?action=produccion")
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(!d.ok) throw new Error(d.error||"Error");
-      renderCocina(d);
-    })
-    .catch(function(e){
-      $("kb").innerHTML='<div class="errb">Error al cargar: '+e+'</div>';
+    pedidosDetalle.push({
+      fila: r + 1,
+      fechaCompleta: Utilities.formatDate(new Date(datos[r][0]), Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm"),
+      hora: Utilities.formatDate(new Date(datos[r][0]), Session.getScriptTimeZone(), "HH:mm"),
+      cliente: datos[r][1] || "Sin nombre",
+      direccion: datos[r][2] || "",
+      fechaEntrega: datos[r][3] || "",
+      total: datos[r][5] || 0,
+      detalle: datos[r][6 + COMBOS_PROD.length] || ""
     });
-}
-
-function renderCocina(d){
-  var pz=d.piezas||{},sorted=[],tot=0;
-  for(var k in pz) if(pz[k]>0) sorted.push([k,pz[k]]);
-  sorted.sort(function(a,b){return b[1]-a[1];});
-  for(var i=0;i<sorted.length;i++) tot+=sorted[i][1];
-
-  var el=$("kb");
-  var h='<div class="st">'+
-    '<div class="sc"><div class="sn">'+(d.totalPedidos||0)+'</div><div class="sl">Pedidos semana</div></div>'+
-    '<div class="sc"><div class="sn">'+tot+'</div><div class="sl">Piezas totales</div></div>'+
-    '<div class="sc"><div class="sn" style="font-size:20px">'+fmt(d.totalVentas||0)+'</div><div class="sl">Ventas semana</div></div>'+
-    '</div>';
-  // Mostrar rango de la semana
-  if(d.fechaDesde && d.fechaHasta){
-    h+='<div style="background:#1a1500;border:1px solid var(--gold2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--gold);text-align:center">'+
-       'Acumulado semana: <strong>lunes '+d.fechaDesde+' al '+d.fechaHasta+'</strong> — se reinicia cada lunes'+
-       '</div>';
   }
 
-  var cb=d.comboTotales||{},ck=Object.keys(cb);
-  if(ck.length){
-    h+='<div class="kt">Combos del dia</div>';
-    for(var i=0;i<ck.length;i++) h+='<span class="pill">'+cb[ck[i]]+"x "+ck[i]+'</span>';
-  }
-
-  if(sorted.length){
-    h+='<div class="kt">Rolls a producir</div>';
-    for(var i=0;i<sorted.length;i++){
-      var r=Math.ceil(sorted[i][1]/10);
-      h+='<div class="pr">'+
-         '<div><div class="prl">'+sorted[i][0]+'</div><div class="ps">'+r+" rollo"+(r!==1?"s":"")+'</div></div>'+
-         '<div style="text-align:right"><div class="pn">'+sorted[i][1]+'</div><div class="pu">piezas</div></div>'+
-         '</div>';
+  // Calcular piezas usando la matriz
+  const piezas = {};
+  for (const [roll, vec] of Object.entries(MATRIX)) {
+    let total = 0;
+    for (let c = 0; c < COMBOS_PROD.length; c++) {
+      total += (comboTotales[COMBOS_PROD[c]] || 0) * vec[c];
     }
-    h+='<div style="height:1px;background:var(--border);margin:12px 0"></div>'+
-       '<div class="pr tot"><div class="prl g">TOTAL PIEZAS</div><div class="pn">'+tot+'</div></div>';
+    if (total > 0) piezas[roll] = total;
   }
 
-  var pp=d.pedidos||[];
-  if(pp.length){
-    h+='<div class="kt">Pedidos del dia</div>';
-    for(var i=pp.length-1;i>=0;i--){
-      var p=pp[i];
-      pedidosHoy[p.fila]=p;
-      h+='<div class="pcard" id="ped-'+p.fila+'">'+
-         '<div style="display:flex;justify-content:space-between;align-items:center">'+
-         '<div class="ph">'+p.hora+(p.fechaEntrega?" - "+p.fechaEntrega:"")+'</div>'+
-         '<div style="display:flex;gap:6px">'+
-         '<button onclick="abrirEditar('+p.fila+')" style="background:#1a2a1a;border:1px solid #2a4a2a;color:#4ade80;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">Editar</button>'+
-         '<button onclick="eliminarPedido('+p.fila+')" style="background:#2a0a0a;border:1px solid #5a1a1a;color:#f87171;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">Borrar</button>'+
-         '</div></div>'+
-         '<div class="pcc">'+(p.cliente||"Sin nombre")+'</div>'+
-         (p.direccion?'<div class="pdir">'+p.direccion+'</div>':'')+
-         (p.detalle?'<div class="pdt">'+p.detalle+'</div>':'')+
-         '<div class="ptot">'+fmt(p.total||0)+'</div>'+
-         '</div>';
-    }
-  }
-  el.innerHTML=h;
-}
-
-function eliminarPedido(fila){
-  var p=pedidosHoy[fila];
-  var nombre=p?(p.cliente||"este pedido"):"este pedido";
-  if(!confirm("Eliminar el pedido de "+nombre+"?")) return;
-  var el=$("ped-"+fila);
-  if(el){ el.style.opacity="0.4"; el.style.pointerEvents="none"; }
-  var img=new Image();
-  img.src=SU+"?action=eliminar&fila="+fila;
-  img.onload=img.onerror=function(){ setTimeout(function(){ loadK(); },1500); };
-}
-
-// EDICION DE PEDIDO
-var editItems = []; // [{id, n, s, p, q}]
-
-function abrirEditar(fila){
-  var p=pedidosHoy[fila];
-  if(!p){ alert("No se encontro el pedido. Actualiza la lista."); return; }
-  $("e-cliente").value=p.cliente||"";
-  $("e-dir").value=p.direccion||"";
-  $("e-fecha").value=p.fechaEntrega||"";
-  $("e-obs").value=p.obs||"";
-  $("e-fila").value=fila;
-
-  editItems=[];
-
-  if(p.detalle){
-    var parts=p.detalle.split("|");
-    for(var i=0;i<parts.length;i++){
-      var part=parts[i].trim();
-      if(!part) continue;
-      var m=part.match(/^(\d+)x\s+(.+)$/);
-      if(m){
-        var qty=parseInt(m[1]);
-        var rest=m[2].trim();
-        // buscar en MENU — comparación flexible
-        var found=null;
-        for(var c=0;c<MENU.length&&!found;c++){
-          for(var j=0;j<MENU[c].i.length&&!found;j++){
-            var x=MENU[c].i[j];
-            var full1=x.n+(x.s?" "+x.s:"");
-            var full2=x.n;
-            if(full1===rest||full2===rest||
-               full1.toLowerCase()===rest.toLowerCase()||
-               rest.toLowerCase().indexOf(x.n.toLowerCase())===0){
-              found=x;
-            }
-          }
-        }
-        if(found){
-          editItems.push({id:found.id,n:found.n,s:found.s,p:found.p,pr:found.pr||"",q:qty});
-        } else {
-          // item sin precio conocido — usar precio del pedido dividido proporcionalmente
-          editItems.push({id:"custom-"+i,n:rest,s:"",p:0,pr:"",q:qty});
-        }
-      }
-    }
-  }
-
-  // Si no se pudo parsear nada, mostrar total original como item único
-  if(!editItems.length){
-    editItems.push({id:"custom-orig",n:"Pedido original",s:"",p:p.total||0,pr:"",q:1});
-  }
-
-  // Poblar selectores de categorías
-  var catSel=$("e-cat");
-  catSel.innerHTML='<option value="">-- Categoria --</option>';
-  for(var i=0;i<MENU.length;i++){
-    catSel.innerHTML+='<option value="'+i+'">'+MENU[i].c+'</option>';
-  }
-
-  renderEditItems();
-  $("edit-modal").className="modal-overlay show";
-}
-
-function fillEItems(){
-  var ci=parseInt($("e-cat").value);
-  var sel=$("e-prod");
-  sel.innerHTML='<option value="">-- Producto --</option>';
-  if(isNaN(ci)||ci<0) return;
-  for(var j=0;j<MENU[ci].i.length;j++){
-    var x=MENU[ci].i[j];
-    if(x.activo==="NO") continue;
-    sel.innerHTML+='<option value="'+ci+"-"+j+'">'+x.n+(x.s?" - "+x.s:"")+" - "+fmt(x.p)+'</option>';
-  }
-}
-
-function agregarItemEdicion(){
-  var val=$("e-prod").value;
-  if(!val){ toast("Selecciona un producto",true); return; }
-  var parts=val.split("-");
-  var ci=parseInt(parts[0]),j=parseInt(parts[1]);
-  var x=MENU[ci].i[j];
-  var qty=parseInt($("e-qty").value)||1;
-  var found=false;
-  for(var i=0;i<editItems.length;i++){
-    if(editItems[i].id===x.id){ editItems[i].q+=qty; found=true; break; }
-  }
-  if(!found) editItems.push({id:x.id,n:x.n,s:x.s,p:x.p,pr:x.pr||"",q:qty});
-  $("e-qty").value=1;
-  $("e-prod").value="";
-  $("e-cat").value="";
-  $("e-prod").innerHTML='<option value="">-- Producto --</option>';
-  renderEditItems();
-}
-
-function quitarEditItem(i){
-  editItems.splice(i,1);
-  renderEditItems();
-}
-
-function cambiarQtyEdit(i, delta){
-  editItems[i].q+=delta;
-  if(editItems[i].q<=0) editItems.splice(i,1);
-  renderEditItems();
-}
-
-function renderEditItems(){
-  var total=0;
-  var h="";
-  for(var i=0;i<editItems.length;i++){
-    var it=editItems[i];
-    var subtotal=it.p*it.q;
-    total+=subtotal;
-    h+='<div style="display:flex;align-items:center;background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);gap:8px">'+
-       '<div style="flex:1;min-width:0">'+
-       '<div style="font-size:13px;font-weight:700;color:#fff">'+it.n+(it.s?" <span style='font-size:11px;color:var(--gold)'>"+it.s+"</span>":"")+'</div>'+
-       (it.p>0?'<div style="font-size:11px;color:#666">'+fmt(it.p)+' c/u</div>':'')+
-       '</div>'+
-       '<div style="display:flex;align-items:center;gap:6px">'+
-       '<button onclick="cambiarQtyEdit('+i+',-1)" style="width:26px;height:26px;border-radius:50%;border:none;background:#2a2a2a;color:#ccc;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">-</button>'+
-       '<span style="font-weight:800;font-size:15px;color:var(--gold);min-width:20px;text-align:center">'+it.q+'</span>'+
-       '<button onclick="cambiarQtyEdit('+i+',1)" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--gold);color:#000;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>'+
-       '</div>'+
-       (it.p>0?'<div style="font-size:13px;font-weight:700;color:var(--gold);white-space:nowrap;min-width:60px;text-align:right">'+fmt(subtotal)+'</div>':'')+
-       '<button onclick="quitarEditItem('+i+')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:16px;padding:2px 4px">x</button>'+
-       '</div>';
-  }
-  if(!h) h='<div style="text-align:center;padding:16px;color:#444;font-size:13px">Sin productos. Agrega desde el menu de arriba.</div>';
-  $("e-items").innerHTML=h;
-  $("e-total").value=total;
-  $("e-total-display").textContent=fmt(total);
-}
-
-function cerrarModal(){
-  $("edit-modal").className="modal-overlay";
-}
-
-function guardarEdicion(){
-  var fila=parseInt($("e-fila").value);
-  var det=editItems.map(function(it){ return it.q+"x "+it.n+(it.s?" "+it.s:""); }).join(" | ");
-  var total=Number($("e-total").value)||0;
-
-  // Reconstruir cantidades para actualizar produccion en Sheets
-  var cant={};
-  for(var i=0;i<editItems.length;i++){
-    var it=editItems[i];
-    if(it.pr) cant[it.pr]=(cant[it.pr]||0)+it.q;
-  }
-
-  var payload={
-    fila:fila,
-    cliente:$("e-cliente").value.trim(),
-    direccion:$("e-dir").value.trim(),
-    fechaEntrega:$("e-fecha").value.trim(),
-    detalle:det,
-    obs:$("e-obs").value.trim(),
-    total:total,
-    cantidades:cant  // esto actualiza las piezas de produccion
+  const result = {
+    ok: true,
+    fecha: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM/yyyy"),
+    fechaDesde: Utilities.formatDate(lunes, Session.getScriptTimeZone(), "dd/MM"),
+    fechaHasta: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd/MM"),
+    totalPedidos,
+    totalVentas,
+    comboTotales,
+    piezas,
+    pedidos: pedidosDetalle
   };
-  cerrarModal();
-  var el=$("ped-"+fila);
-  if(el) el.style.opacity="0.5";
-  var img=new Image();
-  img.src=SU+"?action=editarPedido&data="+encodeURIComponent(JSON.stringify(payload));
-  img.onload=img.onerror=function(){ setTimeout(function(){ loadK(); },1500); };
+
+  // Actualizar hoja SEMANA en Sheets
+  try { actualizarHojaSemana(ss, pedidosDetalle, comboTotales, totalVentas, lunes); } catch(e) { Logger.log('Error hoja semana: '+e); }
+
+  const output = ContentService.createTextOutput(JSON.stringify(result));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
-// INIT
-var qs=location.search;
-if(qs.indexOf("cocina")>=0){
-  $("vk").style.display="block";
-  document.title="MISO.BOX Cocina";
-  loadK();
-} else if(qs.indexOf("admin")>=0){
-  $("va-login").style.display="block";
-  document.title="MISO.BOX Admin";
-} else {
-  $("vc").style.display="block";
-  rMenu();
-  loadPrecios();
+// ═══════════════════════════════════════════════════════════════
+// HOJA SEMANA — vista limpia para Euge en Google Sheets
+// ═══════════════════════════════════════════════════════════════
+function actualizarHojaSemana(ss, pedidos, comboTotales, totalVentas, lunes) {
+  var hoja = ss.getSheetByName("SEMANA");
+  if (!hoja) hoja = ss.insertSheet("SEMANA");
+  hoja.clear();
+  hoja.clearFormats();
+
+  var hasta = new Date();
+  var tituloRango = "Semana " + Utilities.formatDate(lunes, Session.getScriptTimeZone(), "dd/MM") +
+                   " al " + Utilities.formatDate(hasta, Session.getScriptTimeZone(), "dd/MM/yyyy");
+
+  // Título
+  hoja.getRange("A1").setValue("MISO.BOX — " + tituloRango);
+  hoja.getRange("A1:E1").merge();
+  hoja.getRange("A1").setFontSize(14).setFontWeight("bold").setFontColor("#F5C400").setBackground("#1a1a1a");
+
+  // Encabezados
+  var headers = ["Fecha/Hora", "Dia entrega", "Cliente", "Detalle completo", "Total $"];
+  hoja.getRange(2, 1, 1, headers.length).setValues([headers]);
+  var headRange = hoja.getRange(2, 1, 1, headers.length);
+  headRange.setBackground("#2a2a2a").setFontColor("#F5C400").setFontWeight("bold").setFontSize(11);
+  hoja.setFrozenRows(2);
+
+  // Datos de pedidos
+  var filaInicio = 3;
+  for (var i = 0; i < pedidos.length; i++) {
+    var p = pedidos[i];
+    var fila = filaInicio + i;
+    var fecha = p.hora || "";
+    hoja.getRange(fila, 1).setValue(p.fechaCompleta || fecha);
+    hoja.getRange(fila, 2).setValue(p.fechaEntrega || "");
+    hoja.getRange(fila, 3).setValue(p.cliente || "Sin nombre");
+    hoja.getRange(fila, 4).setValue(p.detalle || "");
+    hoja.getRange(fila, 5).setValue(p.total || 0);
+    hoja.getRange(fila, 5).setNumberFormat('$#,##0');
+    // Alternar color de fila
+    var bg = i % 2 === 0 ? "#181818" : "#141414";
+    hoja.getRange(fila, 1, 1, 5).setBackground(bg).setFontColor("#dddddd");
+  }
+
+  var ultimaFila = filaInicio + pedidos.length;
+
+  // Separador
+  hoja.getRange(ultimaFila, 1, 1, 5).setBackground("#111111");
+
+  // Fila de totales por combo
+  hoja.getRange(ultimaFila + 1, 1).setValue("COMBOS DE LA SEMANA");
+  hoja.getRange(ultimaFila + 1, 1, 1, 5).merge();
+  hoja.getRange(ultimaFila + 1, 1).setBackground("#1a1500").setFontColor("#F5C400").setFontWeight("bold").setFontSize(12);
+
+  // Encabezados combos
+  hoja.getRange(ultimaFila + 2, 1).setValue("Combo");
+  hoja.getRange(ultimaFila + 2, 2).setValue("Cantidad pedida");
+  hoja.getRange(ultimaFila + 2, 1, 1, 2).setBackground("#2a2500").setFontColor("#F5C400").setFontWeight("bold");
+
+  var filaCombo = ultimaFila + 3;
+  var comboKeys = Object.keys(comboTotales);
+  for (var c = 0; c < comboKeys.length; c++) {
+    hoja.getRange(filaCombo + c, 1).setValue(comboKeys[c]);
+    hoja.getRange(filaCombo + c, 2).setValue(comboTotales[comboKeys[c]]);
+    hoja.getRange(filaCombo + c, 2).setFontWeight("bold").setFontColor("#F5C400").setFontSize(13);
+    var bg2 = c % 2 === 0 ? "#181818" : "#141414";
+    hoja.getRange(filaCombo + c, 1, 1, 2).setBackground(bg2);
+    hoja.getRange(filaCombo + c, 1).setFontColor("#dddddd");
+  }
+
+  // Total ventas
+  var filaTotalVentas = filaCombo + comboKeys.length + 1;
+  hoja.getRange(filaTotalVentas, 1).setValue("TOTAL VENTAS SEMANA");
+  hoja.getRange(filaTotalVentas, 2).setValue(totalVentas);
+  hoja.getRange(filaTotalVentas, 2).setNumberFormat('$#,##0');
+  hoja.getRange(filaTotalVentas, 1, 1, 2).setBackground("#1a1500").setFontColor("#F5C400").setFontWeight("bold").setFontSize(13);
+
+  // Anchos de columna
+  hoja.setColumnWidth(1, 140);
+  hoja.setColumnWidth(2, 120);
+  hoja.setColumnWidth(3, 160);
+  hoja.setColumnWidth(4, 350);
+  hoja.setColumnWidth(5, 110);
 }
-</script>
-</body>
-</html>
+
+// ═══════════════════════════════════════════════════════════════
+// GUARDAR PEDIDO
+// ═══════════════════════════════════════════════════════════════
+function guardarPedido(ss, data) {
+  const hoja = ss.getSheetByName("PEDIDOS");
+  const fila = [
+    new Date(),
+    data.cliente || "",
+    data.direccion || "",
+    data.fechaEntrega || "",
+    data.obs || "",
+    data.total || 0,
+  ];
+  for (let i = 0; i < COMBOS_PROD.length; i++) {
+    fila.push(data.cantidades ? (data.cantidades[COMBOS_PROD[i]] || 0) : 0);
+  }
+  fila.push(data.detalle || "");
+  hoja.appendRow(fila);
+}
+
+function respuesta(obj) {
+  const output = ContentService.createTextOutput(JSON.stringify(obj));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURAR PLANILLA — ejecutá UNA vez
+// ═══════════════════════════════════════════════════════════════
+function configurarPlanilla() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.rename(NOMBRE_PLANILLA);
+  crearHojaPedidos(ss);
+  SpreadsheetApp.getUi().alert("✅ ¡Listo! Planilla configurada.\n\nAhora hacé Deploy → New Deployment.");
+}
+
+function crearHojaPedidos(ss) {
+  let hoja = ss.getSheetByName("PEDIDOS");
+  if (!hoja) hoja = ss.insertSheet("PEDIDOS");
+  hoja.clear();
+  const headers = ["Fecha/Hora","Cliente","Dirección","Fecha Entrega","Observaciones","Total $",...COMBOS_PROD,"Detalle completo"];
+  hoja.getRange(1, 1, 1, headers.length).setValues([headers]);
+  const head = hoja.getRange(1, 1, 1, headers.length);
+  head.setBackground("#1a1a1a");
+  head.setFontColor("#F5C400");
+  head.setFontWeight("bold");
+  hoja.setColumnWidth(1, 160);
+  hoja.setColumnWidth(2, 140);
+  hoja.setColumnWidth(3, 180);
+  hoja.setColumnWidth(6, 100);
+  hoja.setFrozenRows(1);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CARTA — leer y guardar
+// ═══════════════════════════════════════════════════════════════
+function getCarta() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var hoja = ss.getSheetByName("CARTA");
+  if (!hoja) {
+    // Si no existe la hoja CARTA devolver vacío
+    var out = ContentService.createTextOutput(JSON.stringify({ok:true, items:[]}));
+    out.setMimeType(ContentService.MimeType.JSON);
+    return out;
+  }
+  var datos = hoja.getDataRange().getValues();
+  var items = [];
+  for (var r = 1; r < datos.length; r++) {
+    if (!datos[r][0]) continue;
+    items.push({
+      id:     datos[r][0] || '',
+      cat:    datos[r][1] || '',
+      n:      datos[r][2] || '',
+      s:      datos[r][3] || '',
+      p:      datos[r][4] || 0,
+      d:      datos[r][5] || '',
+      pr:     datos[r][6] || '',
+      activo: datos[r][7] || 'SI',
+      nuevo:  datos[r][8] === true || datos[r][8] === 'TRUE'
+    });
+  }
+  var out = ContentService.createTextOutput(JSON.stringify({ok:true, items:items}));
+  out.setMimeType(ContentService.MimeType.JSON);
+  return out;
+}
+
+function guardarCarta(ss, items) {
+  var hoja = ss.getSheetByName("CARTA");
+  if (!hoja) hoja = ss.insertSheet("CARTA");
+  hoja.clear();
+  // Encabezados
+  var headers = ["ID","Categoría","Nombre","Tamaño","Precio","Descripción","Prod Key","Activo","Nuevo"];
+  hoja.getRange(1, 1, 1, headers.length).setValues([headers]);
+  var head = hoja.getRange(1, 1, 1, headers.length);
+  head.setBackground("#1a1a1a");
+  head.setFontColor("#F5C400");
+  head.setFontWeight("bold");
+  hoja.setFrozenRows(1);
+  // Datos
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    hoja.appendRow([it.id||'', it.cat||'', it.n||'', it.s||'', Number(it.p)||0, it.d||'', it.pr||'', it.activo||'SI', it.nuevo||false]);
+  }
+  // Formatear columna precio
+  hoja.getRange(2, 5, items.length, 1).setNumberFormat('$#,##0');
+  hoja.setColumnWidth(1, 100);
+  hoja.setColumnWidth(2, 160);
+  hoja.setColumnWidth(3, 180);
+  hoja.setColumnWidth(6, 250);
+}
