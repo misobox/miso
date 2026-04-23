@@ -256,15 +256,42 @@ body{background:#0d0d0d;color:#f0ece0;font-family:'DM Sans',sans-serif;min-heigh
     <input class="modal-inp" id="e-dir"/>
     <label class="modal-lbl">Fecha y hora entrega</label>
     <input class="modal-inp" id="e-fecha"/>
-    <label class="modal-lbl">Detalle del pedido</label>
-    <textarea class="modal-ta" id="e-detalle" rows="4" placeholder="Ej: 2x SUSHIBOX 30pz + 1x HAND ROLL agregado por cliente"></textarea>
     <label class="modal-lbl">Observaciones</label>
     <input class="modal-inp" id="e-obs"/>
-    <div style="background:#1a1500;border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:16px">
-      <label style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:8px">Total $ — ACTUALIZA SI CAMBIO EL PEDIDO</label>
-      <input id="e-total" type="number" style="width:100%;background:#0d0d0d;border:2px solid var(--gold);color:var(--gold);border-radius:10px;padding:14px;font-size:28px;font-weight:700;font-family:'DM Sans',sans-serif;text-align:center"/>
-      <div style="font-size:11px;color:#888;margin-top:8px;text-align:center">Cambia este numero si el cliente agrego o quito productos</div>
+
+    <!-- PRODUCTOS DEL PEDIDO -->
+    <label class="modal-lbl" style="margin-top:4px">Productos del pedido</label>
+    <div id="e-items" style="margin-bottom:12px"></div>
+
+    <!-- AGREGAR PRODUCTO -->
+    <div style="background:#111;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#666;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Agregar producto</div>
+      <select id="e-cat" onchange="fillEItems()" style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:8px">
+        <option value="">-- Categoria --</option>
+      </select>
+      <select id="e-prod" style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:13px;font-family:'DM Sans',sans-serif;margin-bottom:8px">
+        <option value="">-- Producto --</option>
+      </select>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="e-qty" type="number" min="1" value="1" style="width:70px;background:#0d0d0d;border:1px solid var(--border);color:#f0ece0;border-radius:8px;padding:9px;font-size:14px;font-family:'DM Sans',sans-serif;text-align:center"/>
+        <button onclick="agregarItemEdicion()" style="flex:1;padding:9px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">+ Agregar</button>
+      </div>
     </div>
+
+    <!-- TOTAL -->
+    <div style="background:#1a1500;border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;font-weight:700;color:#888">TOTAL</div>
+      <div id="e-total-display" style="font-family:'Bebas Neue';font-size:32px;color:var(--gold)">$0</div>
+    </div>
+    <input type="hidden" id="e-fila"/>
+    <input type="hidden" id="e-total"/>
+
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="modal-save" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
     <input type="hidden" id="e-fila"/>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -813,17 +840,136 @@ function eliminarPedido(fila){
   img.onload=img.onerror=function(){ setTimeout(function(){ loadK(); },1500); };
 }
 
+// EDICION DE PEDIDO
+var editItems = []; // [{id, n, s, p, q}]
+
 function abrirEditar(fila){
   var p=pedidosHoy[fila];
   if(!p){ alert("No se encontro el pedido. Actualiza la lista."); return; }
   $("e-cliente").value=p.cliente||"";
   $("e-dir").value=p.direccion||"";
   $("e-fecha").value=p.fechaEntrega||"";
-  $("e-detalle").value=p.detalle||"";
   $("e-obs").value=p.obs||"";
-  $("e-total").value=p.total||0;
   $("e-fila").value=fila;
+
+  editItems=[];
+
+  if(p.detalle){
+    var parts=p.detalle.split("|");
+    for(var i=0;i<parts.length;i++){
+      var part=parts[i].trim();
+      if(!part) continue;
+      var m=part.match(/^(\d+)x\s+(.+)$/);
+      if(m){
+        var qty=parseInt(m[1]);
+        var rest=m[2].trim();
+        // buscar en MENU — comparación flexible
+        var found=null;
+        for(var c=0;c<MENU.length&&!found;c++){
+          for(var j=0;j<MENU[c].i.length&&!found;j++){
+            var x=MENU[c].i[j];
+            var full1=x.n+(x.s?" "+x.s:"");
+            var full2=x.n;
+            if(full1===rest||full2===rest||
+               full1.toLowerCase()===rest.toLowerCase()||
+               rest.toLowerCase().indexOf(x.n.toLowerCase())===0){
+              found=x;
+            }
+          }
+        }
+        if(found){
+          editItems.push({id:found.id,n:found.n,s:found.s,p:found.p,pr:found.pr||"",q:qty});
+        } else {
+          // item sin precio conocido — usar precio del pedido dividido proporcionalmente
+          editItems.push({id:"custom-"+i,n:rest,s:"",p:0,pr:"",q:qty});
+        }
+      }
+    }
+  }
+
+  // Si no se pudo parsear nada, mostrar total original como item único
+  if(!editItems.length){
+    editItems.push({id:"custom-orig",n:"Pedido original",s:"",p:p.total||0,pr:"",q:1});
+  }
+
+  // Poblar selectores de categorías
+  var catSel=$("e-cat");
+  catSel.innerHTML='<option value="">-- Categoria --</option>';
+  for(var i=0;i<MENU.length;i++){
+    catSel.innerHTML+='<option value="'+i+'">'+MENU[i].c+'</option>';
+  }
+
+  renderEditItems();
   $("edit-modal").className="modal-overlay show";
+}
+
+function fillEItems(){
+  var ci=parseInt($("e-cat").value);
+  var sel=$("e-prod");
+  sel.innerHTML='<option value="">-- Producto --</option>';
+  if(isNaN(ci)||ci<0) return;
+  for(var j=0;j<MENU[ci].i.length;j++){
+    var x=MENU[ci].i[j];
+    if(x.activo==="NO") continue;
+    sel.innerHTML+='<option value="'+ci+"-"+j+'">'+x.n+(x.s?" - "+x.s:"")+" - "+fmt(x.p)+'</option>';
+  }
+}
+
+function agregarItemEdicion(){
+  var val=$("e-prod").value;
+  if(!val){ toast("Selecciona un producto",true); return; }
+  var parts=val.split("-");
+  var ci=parseInt(parts[0]),j=parseInt(parts[1]);
+  var x=MENU[ci].i[j];
+  var qty=parseInt($("e-qty").value)||1;
+  var found=false;
+  for(var i=0;i<editItems.length;i++){
+    if(editItems[i].id===x.id){ editItems[i].q+=qty; found=true; break; }
+  }
+  if(!found) editItems.push({id:x.id,n:x.n,s:x.s,p:x.p,pr:x.pr||"",q:qty});
+  $("e-qty").value=1;
+  $("e-prod").value="";
+  $("e-cat").value="";
+  $("e-prod").innerHTML='<option value="">-- Producto --</option>';
+  renderEditItems();
+}
+
+function quitarEditItem(i){
+  editItems.splice(i,1);
+  renderEditItems();
+}
+
+function cambiarQtyEdit(i, delta){
+  editItems[i].q+=delta;
+  if(editItems[i].q<=0) editItems.splice(i,1);
+  renderEditItems();
+}
+
+function renderEditItems(){
+  var total=0;
+  var h="";
+  for(var i=0;i<editItems.length;i++){
+    var it=editItems[i];
+    var subtotal=it.p*it.q;
+    total+=subtotal;
+    h+='<div style="display:flex;align-items:center;background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);gap:8px">'+
+       '<div style="flex:1;min-width:0">'+
+       '<div style="font-size:13px;font-weight:700;color:#fff">'+it.n+(it.s?" <span style='font-size:11px;color:var(--gold)'>"+it.s+"</span>":"")+'</div>'+
+       (it.p>0?'<div style="font-size:11px;color:#666">'+fmt(it.p)+' c/u</div>':'')+
+       '</div>'+
+       '<div style="display:flex;align-items:center;gap:6px">'+
+       '<button onclick="cambiarQtyEdit('+i+',-1)" style="width:26px;height:26px;border-radius:50%;border:none;background:#2a2a2a;color:#ccc;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">-</button>'+
+       '<span style="font-weight:800;font-size:15px;color:var(--gold);min-width:20px;text-align:center">'+it.q+'</span>'+
+       '<button onclick="cambiarQtyEdit('+i+',1)" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--gold);color:#000;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>'+
+       '</div>'+
+       (it.p>0?'<div style="font-size:13px;font-weight:700;color:var(--gold);white-space:nowrap;min-width:60px;text-align:right">'+fmt(subtotal)+'</div>':'')+
+       '<button onclick="quitarEditItem('+i+')" style="background:none;border:none;color:#e05555;cursor:pointer;font-size:16px;padding:2px 4px">x</button>'+
+       '</div>';
+  }
+  if(!h) h='<div style="text-align:center;padding:16px;color:#444;font-size:13px">Sin productos. Agrega desde el menu de arriba.</div>';
+  $("e-items").innerHTML=h;
+  $("e-total").value=total;
+  $("e-total-display").textContent=fmt(total);
 }
 
 function cerrarModal(){
@@ -832,18 +978,29 @@ function cerrarModal(){
 
 function guardarEdicion(){
   var fila=parseInt($("e-fila").value);
+  var det=editItems.map(function(it){ return it.q+"x "+it.n+(it.s?" "+it.s:""); }).join(" | ");
+  var total=Number($("e-total").value)||0;
+
+  // Reconstruir cantidades para actualizar produccion en Sheets
+  var cant={};
+  for(var i=0;i<editItems.length;i++){
+    var it=editItems[i];
+    if(it.pr) cant[it.pr]=(cant[it.pr]||0)+it.q;
+  }
+
   var payload={
     fila:fila,
     cliente:$("e-cliente").value.trim(),
     direccion:$("e-dir").value.trim(),
     fechaEntrega:$("e-fecha").value.trim(),
-    detalle:$("e-detalle").value.trim(),
+    detalle:det,
     obs:$("e-obs").value.trim(),
-    total:Number($("e-total").value)||0
+    total:total,
+    cantidades:cant  // esto actualiza las piezas de produccion
   };
   cerrarModal();
   var el=$("ped-"+fila);
-  if(el){ el.style.opacity="0.5"; }
+  if(el) el.style.opacity="0.5";
   var img=new Image();
   img.src=SU+"?action=editarPedido&data="+encodeURIComponent(JSON.stringify(payload));
   img.onload=img.onerror=function(){ setTimeout(function(){ loadK(); },1500); };
